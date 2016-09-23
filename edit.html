@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <a href="edit.html">edit</a> | <a href="walk.html">walk</a><br />
+
+    <div id="map" style="width:500px; height:450px;"></div>
+    <script>
+
+
+        var routearray = [];
+        var map;
+
+        function initMap() {
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 3,
+                center: { lat: 0, lng: -180 },
+                mapTypeId: google.maps.MapTypeId.TERRAIN
+            });
+
+            google.maps.event.addListener(map, 'click', function (event) {
+                routearray.push(event.latLng);
+
+                localStorage.setItem("routearray", JSON.stringify(routearray));
+
+                drawroute();
+            });
+
+            drawroute();
+
+
+        }
+
+        function drawroute() {
+            //for (index = 0; index < routearray.length; ++index) {
+
+                var flightPath = new google.maps.Polyline({
+                    path: routearray,
+                    geodesic: true,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2
+                });
+
+                flightPath.setMap(map);
+//            }
+
+        }
+    </script>
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDX4iTWVgL6GMNjntMmbySyBCzOtsY7KgI&callback=initMap">
+    </script>
+
+</body>
+</html>
+

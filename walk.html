@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<body>
+    <a href="edit.html">edit</a> | <a href="walk.html">walk</a><br />
+    <button id="checkin" onclick="checkinbuttonclicked()">Check In</button>
+    <input type="text" id="distance" />
+    <br />
+    <div id="map" style="width:45%; height:450px;" align="left"></div>
+    <div id="sidebox" style="width:45%; height:450px; border-width:1px;" align="right"></div>
+
+    <br />
+    <script>
+        /*
+
+        sidebox div
+
+        */
+
+        var routearray = [];
+        if (localStorage.routearray != null) {
+            routearray = JSON.parse(localStorage.routearray);
+        }
+
+        var checkinarray = [];
+        if (localStorage.checkinarray != null) {
+            checkinarray = localStorage.checkinarray;
+        }
+
+        var map;
+
+        function initMap() {
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 3,
+                center: { lat: 0, lng: -180 },
+                mapTypeId: google.maps.MapTypeId.TERRAIN
+            });
+
+            center();
+            drawroute();
+            drawmarkeratdistance(1);
+            drawmarkeratdistance(5);
+            drawmarkeratdistance(25);
+            drawmarkeratdistance(50);
+            drawmarkeratdistance(100);
+            drawmarkeratdistance(500);
+            drawmarkeratdistance(1000);
+            drawmarkeratdistance(5000);
+            drawmarkeratdistance(10000);
+
+            //          load checkinarray
+            //          if any values in checkinarray
+            //              drawmarkeratdistance(x)
+            //          displayinfoforpoint(x,y of last point in routearray)
+
+
+        }
+
+
+        function drawmarkeratdistance(distance) {
+            var runningtotal = 0;
+            var lastpoint = routearray[0];
+            for (var i = 1; i < routearray.length ; i++) {
+                var thismyhere = routearray[i];
+                var before = new google.maps.LatLng(lastpoint.lat, lastpoint.lng);
+                var after = new google.maps.LatLng(thismyhere.lat, thismyhere.lng);
+
+                //get distance to next point
+                var dist = google.maps.geometry.spherical.computeDistanceBetween(before, after);
+                dist = dist / 1000;
+                runningtotal += dist;
+                //if runningtotal+dtnp > passed distance
+                if (runningtotal >= distance) {
+                    //	draw marker on this point
+                    marker = new google.maps.Marker({
+                        map: map,
+                        animation: google.maps.Animation.DROP,
+                        position: { lat: thismyhere.lat, lng: thismyhere.lng }
+                    });
+                    marker.addListener('click', function () {
+
+                        populatesidebox(displayinfoforpoint(thismyhere));
+                    });
+                    //	set click event to displayinfoforpoint(x,y)
+                    break;
+                }
+            }
+        }
+        function populatesidebox(text) {
+            var div = document.getElementById('sidebox');
+            if (div != null) {
+                div.innerHTML = text;
+            }
+        }
+
+        function displayinfoforpoint(thispoint) {
+            //	determine locality of point
+            //	populate sidebox for point
+            var returntext = "nothing happened";
+            var url = "http://forecast.weather.gov/MapClick.php?lat=" + thispoint.lat + "&lon=" + thispoint.lng + "&FcstType=JSON&callback=?";
+            //http://forecast.weather.gov/MapClick.php?lat=40.78158&lon=-73.96648&FcstType=JSON
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: "",
+                cache: false,
+                dataType: "json",
+                success: function (data) { onSuccess(data) },
+                error: function (xhr, ajaxOptions) {
+                    returntext = xhr.status + " : " + xhr.statusText;
+                }
+
+            });
+            return returntext;
+            //		https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles=Hudson,%20Wisconsin
+        }
+        function onSuccess(parsed_json) {
+
+            var city = parsed_json;
+
+
+
+
+        }
+        function checkinbuttonclicked() {
+
+            var div = document.getElementById('btnSaveTA');
+            if (div != null) {
+                div.disabled = false;
+            }
+
+            //          look at value in distance entry box
+            //          add distance at end of checkinarray
+            //          save checkinarray
+        }
+        function drawroute() {
+            var flightPath = new google.maps.Polyline({
+                path: routearray,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2
+            });
+
+            flightPath.setMap(map);
+
+        }
+        function center() {
+
+            var bounds = new google.maps.LatLngBounds();
+            var path;
+            for (var i = 0; i < routearray.length ; i++) {
+                var thismyhere = routearray[i];
+                var xyz = new google.maps.LatLng(thismyhere.lat, thismyhere.lng);
+                bounds.extend(xyz);
+            }
+            map.fitBounds(bounds);
+        }
+
+
+    </script>
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDX4iTWVgL6GMNjntMmbySyBCzOtsY7KgI&callback=initMap&libraries=geometry">
+    </script>
+
+</body>
+
+</html>
+
